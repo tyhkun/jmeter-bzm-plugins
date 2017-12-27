@@ -76,9 +76,9 @@ public class HTTP2Connection {
 		this.client = new HTTP2Client();
 		this.sslContextFactory = null;
 		if (this.isSSL) {
-			this.sslContextFactory = new SslContextFactory(true);
+			this.sslContextFactory = new SslContextFactory (true);
+			this.client.addBean(sslContextFactory);
 		}
-		this.client.addBean(sslContextFactory);
 		this.client.start();
 	}
 
@@ -88,8 +88,20 @@ public class HTTP2Connection {
 
 	public void connect(String hostname, int port) throws InterruptedException, ExecutionException, TimeoutException {
 		FuturePromise<Session> sessionFuture = new FuturePromise<>();
-		this.client.connect(this.sslContextFactory, new InetSocketAddress(hostname, port), this.http2SettingsHandler,
+		if (this.isSSL) {
+			this.client.connect (
+				this.sslContextFactory,
+				new InetSocketAddress(hostname, port),
+				this.http2SettingsHandler,
 				sessionFuture);
+		}
+		else
+		{
+			this.client.connect (
+				new InetSocketAddress(hostname, port),
+				this.http2SettingsHandler,
+				sessionFuture);
+		}
 		setSession(sessionFuture.get(10, TimeUnit.SECONDS));
 	}
 

@@ -305,15 +305,20 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 				}
     	} else {
     		try {
-        		//TODO manejar cuando no es SSL
-    			http2Connection = new HTTP2Connection(connectionId,true);
-    			long startConnectTime= sampleResult.currentTimeInMillis();
-    			http2Connection.connect(host, port);
-    			long endConnectTime=sampleResult.currentTimeInMillis();
+                        String prot = getProtocol();
+			boolean useSSL = false;
+                        if (HTTPConstants.PROTOCOL_HTTPS.equalsIgnoreCase(prot)) {
+                           useSSL = true;
+                        }
+			http2Connection = new HTTP2Connection(connectionId,useSSL);
+			long startConnectTime= sampleResult.currentTimeInMillis();
+			http2Connection.connect(host, port);
+			long endConnectTime=sampleResult.currentTimeInMillis();
     			connectTime= endConnectTime - startConnectTime;
     			this.connectionList.put(connectionId, http2Connection);
     		} catch (Exception e) {
     			// TODO Auto-generated catch block
+			log.warn("Exception while creating connection"+e.getMessage());
     			http2Connection = null;
     			e.printStackTrace();
     		}
@@ -418,11 +423,11 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
     }
    
     public void setProtocol(String value) {
-        setProperty(PROTOCOL_SCHEME, value);
+        setProperty(PROTOCOL, value);
     }
 
     public String getProtocol() {        
-        String protocol = getPropertyAsString(PROTOCOL_SCHEME);
+        String protocol = getPropertyAsString(PROTOCOL);
         if (protocol == null || protocol.length() == 0) {
             return DEFAULT_PROTOCOL;
         }
